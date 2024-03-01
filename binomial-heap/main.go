@@ -174,18 +174,18 @@ func decreaseKey(heap *BinomialHeap, node *BinomialNode, newKey int) {
     }
 }
 
-func printHeap(node *BinomialNode, level int, nodeType string) {
+func printHeapHelper(node *BinomialNode, level int, nodeType string) {
     if node == nil {
         return
     }
 
     fmt.Printf("Level: %d, Key: %d, Node Type: %s\n", level, node.key, nodeType)
-    printHeap(node.child, level+1, "Child")
-    printHeap(node.sibling, level, "Sibling")
+    printHeapHelper(node.child, level+1, "Child")
+    printHeapHelper(node.sibling, level, "Sibling")
 }
 
-func (heap *BinomialHeap) Print() {
-    printHeap(heap.head, 0, "Head")
+func printHeap(heap *BinomialHeap) {
+    printHeapHelper(heap.head, 0, "Head")
 }
 
 func main() {
@@ -196,5 +196,5 @@ func main() {
         insert(heap, key)
     }
 
-    heap.Print()
+    printHeap(heap)
 }
