@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-    "strings"
 )
 
 type BinomialNode struct {
@@ -20,17 +19,41 @@ type BinomialHeap struct {
 func merge(heap1 *BinomialNode, heap2 *BinomialNode) *BinomialNode {
     if heap1 == nil {
         return heap2
-    } else if heap2 == nil {
-        return heap1
-    } else {
-        if heap1.key < heap2.key {
-            heap1.sibling = merge(heap1.sibling, heap2)
-            return heap1
-        } else {
-            heap2.sibling = merge(heap2.sibling, heap1)
-            return heap2
-        }
     }
+    if heap2 == nil {
+        return heap1
+    }
+
+    var head *BinomialNode
+
+    if heap1.degree < heap2.degree {
+        head = heap1
+        heap1 = heap1.sibling
+    } else {
+        head = heap2
+        heap2 = heap2.sibling
+    }
+
+    tail := head
+
+    for heap1 != nil && heap2 != nil {
+        if heap1.degree < heap2.degree {
+            tail.sibling = heap1
+            heap1 = heap1.sibling
+        } else {
+            tail.sibling = heap2
+            heap2 = heap2.sibling
+        }
+        tail = tail.sibling
+    }
+
+    if heap1 != nil {
+        tail.sibling = heap1
+    } else {
+        tail.sibling = heap2
+    }
+
+    return head
 }
 
 func isCaseOne(x *BinomialNode, nextX *BinomialNode) bool {
@@ -88,33 +111,81 @@ func insert(heap *BinomialHeap, key int) {
     *heap = *union(heap, newHeap)
 }
 
-func extractMin(heap *BinomialHeap) {
-   //TODO: implement 
+func removeMinNode(heap *BinomialHeap) *BinomialNode {
+    if heap.head == nil {
+        return nil
+    }
+
+    prevX := heap.head
+    x := heap.head
+    nextX := x.sibling
+    min := x
+    prevMin := prevX
+
+    for nextX != nil {
+        if nextX.key < min.key {
+            min = nextX
+            prevMin = prevX
+        }
+        prevX = nextX
+        nextX = nextX.sibling
+    }
+
+    if prevMin == prevX {
+        heap.head = x.sibling
+    } else {
+        prevMin.sibling = min.sibling
+    }
+
+    return min
+}
+
+func reverseList(node *BinomialNode) *BinomialNode {
+    if node == nil || node.sibling == nil {
+       return node
+    }
+    rest := reverseList(node.sibling)
+    node.sibling.sibling = node
+    node.sibling = nil
+    return rest
+}
+
+func extractMin(heap *BinomialHeap) int {
+    x := removeMinNode(heap)
+    y := reverseList(heap.head.child)
+
+    heap = union(heap, &BinomialHeap{y})
+    return x.key
 }
 
 func decreaseKey(heap *BinomialHeap, node *BinomialNode, newKey int) {
-    //TODO: implement
+    if newKey > node.key {
+        return
+    }
+
+    node.key = newKey
+    y := node
+    z := y.parent
+
+    for z != nil && y.key < z.key {
+        y.key, z.key = z.key, y.key
+        y = z
+        z = y.parent
+    }
 }
 
-
-func printHeap(node *BinomialNode, level int) {
+func printHeap(node *BinomialNode, level int, nodeType string) {
     if node == nil {
         return
     }
 
-    fmt.Printf("%sNode: %d, Degree: %d\n", strings.Repeat("  ", level), node.key, node.degree)
-    printHeap(node.child, level+1)
-    printHeap(node.sibling, level)
+    fmt.Printf("Level: %d, Key: %d, Node Type: %s\n", level, node.key, nodeType)
+    printHeap(node.child, level+1, "Child")
+    printHeap(node.sibling, level, "Sibling")
 }
 
-func printBinomialHeap(heap *BinomialHeap) {
-    if heap == nil || heap.head == nil {
-        fmt.Println("Heap is empty")
-        return
-    }
-
-    fmt.Println("Binomial Heap:")
-    printHeap(heap.head, 0)
+func (heap *BinomialHeap) Print() {
+    printHeap(heap.head, 0, "Head")
 }
 
 func main() {
@@ -125,7 +196,5 @@ func main() {
         insert(heap, key)
     }
 
-    bl := heap.head == nil
-    fmt.Println(bl)
-    printBinomialHeap(heap)
+    heap.Print()
 }
