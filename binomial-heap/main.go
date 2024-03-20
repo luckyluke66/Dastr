@@ -16,6 +16,7 @@ type BinomialHeap struct {
     head *BinomialNode
 }
 
+
 func merge(heap1 *BinomialNode, heap2 *BinomialNode) *BinomialNode {
     if heap1 == nil {
         return heap2
@@ -140,6 +141,14 @@ func removeMinNode(heap *BinomialHeap) *BinomialNode {
     return min
 }
 
+func extractMin(heap *BinomialHeap) int {
+    x := removeMinNode(heap)
+    y := reverseList(x.child)
+
+    heap = union(heap, &BinomialHeap{y})
+    return x.key 
+}
+
 func reverseList(node *BinomialNode) *BinomialNode {
     if node == nil || node.sibling == nil {
        return node
@@ -150,15 +159,7 @@ func reverseList(node *BinomialNode) *BinomialNode {
     return rest
 }
 
-func extractMin(heap *BinomialHeap) int {
-    x := removeMinNode(heap)
-    y := reverseList(heap.head.child)
-
-    heap = union(heap, &BinomialHeap{y})
-    return x.key
-}
-
-func decreaseKey(heap *BinomialHeap, node *BinomialNode, newKey int) {
+func decreaseKey(node *BinomialNode, newKey int) {
     if newKey > node.key {
         return
     }
@@ -190,11 +191,14 @@ func printHeap(heap *BinomialHeap) {
 
 func main() {
     heap:= &BinomialHeap{}
-    keys := []int{20, 50, 11, 7, 45, 3, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19}
+    keys := []int{20}
     
     for _, key := range keys {
         insert(heap, key)
     }
 
     printHeap(heap)
+    extractMin(heap)
+    printHeap(heap)
+
 }
