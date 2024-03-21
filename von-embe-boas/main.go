@@ -25,6 +25,14 @@ func low(x int, u int) int {
     return x % int(math.Sqrt(float64(u)))
 }
 
+func Min(node VEBNode) *int {
+    return node.min
+}
+
+func Max(node VEBNode) *int {
+    return node.max
+}
+
 func Member(tree *VEBTree, val int) bool {
     var iter func(node *VEBNode, val int) bool
 
@@ -55,16 +63,18 @@ func Insert(tree *VEBTree, x int) {
 func insert(node *VEBNode, x int) {
     if node.min == nil {
         emptyInsert(node, x)
-    }
-    if x < *node.min {
+    } else if x < *node.min {
         x, *node.min = *node.min, x
     }
     if node.u > 2 {
         high, low := high(x, node.u), low(x, node.u)
-        if node.cluster[high].min == nil {
-            fmt.Println(node.summary, high)
-            insert(node.summary, high)
-            emptyInsert(node.cluster[high], low)
+        if node.cluster[high] == nil || node.cluster[high].min == nil {
+            if node.summary != nil {
+                insert(node.summary, high)
+            }
+            if node.cluster[high] != nil {
+                emptyInsert(node.cluster[high], low)
+            }
         } else {
             insert(node.cluster[high], low)
         }
@@ -73,6 +83,39 @@ func insert(node *VEBNode, x int) {
         node.max = &x
     }
 }
+
+func index(val int, offset int, u int) int {
+    return val*int(math.Sqrt(float64(u))) + offset 
+}
+
+func successor(node *VEBNode, val int) *int {
+    if node == nil || val >= *node.max {
+        return nil
+    }
+    if val < *node.min {
+        return node.min
+    }
+    if node.u > 2 {
+        high, low := high(val, node.u), low(val, node.u)
+        maxLow := node.cluster[high].max
+        if maxLow != nil && low < *maxLow {
+            offset := *successor(node.cluster[high], low)
+            a := index(high, offset, node.u)
+            return &a
+        } else {
+            succCluster := successor(node.summary, high)
+            if succCluster == nil {
+                return nil
+            } else {
+                offset := *node.cluster[*succCluster].min
+                a := index(*succCluster, offset, node.u)
+                return &a
+            }
+        }
+    }
+    return node.max
+}
+
 
 func emptyInsert(node *VEBNode, val int) {
     a := val
@@ -163,9 +206,12 @@ func main() {
 
     Insert(&tree, 2)
     Insert(&tree, 5)
-    //Insert(tree.head, 6)
-    //Insert(&tree, 7)
+    Insert(&tree, 1)
+    Insert(&tree, 6)
+    Insert(&tree, 7)
     printVEB(&tree)
+
+    fmt.Println(*successor(tree.head, 4))
 
     fmt.Println(Member(&tree, 2))
     fmt.Println(Member(&tree, 5))
