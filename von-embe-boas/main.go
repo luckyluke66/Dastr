@@ -123,41 +123,6 @@ func emptyInsert(node *VEBNode, val int) {
     node.max = &a
 }
 
-func MkVEBNode(u int) *VEBNode {
-    node := &VEBNode{}
-    node.u = u
-    if u > 2 {
-        sqrt := int(math.Sqrt(float64(u)))
-        node.cluster = make([]*VEBNode, sqrt)
-        for i := 0; i < sqrt; i++ {
-            node.cluster[i] = MkVEBNode(sqrt)
-        }
-    }
-    return node
-}
-
-func MkVEBTree(u int) VEBTree {
-    tree := VEBTree{}
-    tree.head = MkVEBNode(u)
-    tree.head.summary = MkSummary(tree.head.u / 2)
-    return tree
-}
-
-func MkSummary(u int) *VEBNode {
-    summary := &VEBNode{}
-    div := u / 2
-    summary.u = div
-    if u > 2 {
-        summary.cluster = make([]*VEBNode, div)
-        for i := 0; i < div; i++ {
-            summary.cluster[i] = MkSummary(div)
-        }
-
-        summary.summary = MkSummary(div)
-    }
-    return summary
-}
-
 func printVEBTree(node *VEBNode, level int) {
     if node == nil {
         return
@@ -200,9 +165,26 @@ func printVEB(v *VEBTree) {
     printVEBTree(v.head, 0)
 }
 
+func NewWEBtree(u int) *VEBNode {
+    if u < 2 {
+        return nil
+    }
+    v := &VEBNode{u: u}
+    if u > 2 {
+        clusterSize := int(math.Ceil(math.Sqrt(float64(u))))
+        v.summary = NewWEBtree(clusterSize)
+        v.cluster = make([]*VEBNode, clusterSize)
+        for i := 0; i < clusterSize; i++ {  
+            v.cluster[i] = NewWEBtree(clusterSize)
+        }
+    }
+    return v
+}
+
+
 func main() {
     //items := []int{2, 5, 6,7}
-    tree := MkVEBTree(16)
+    tree := VEBTree{head: NewWEBtree(16)}
 
     Insert(&tree, 2)
     Insert(&tree, 5)
